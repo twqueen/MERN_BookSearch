@@ -15,7 +15,7 @@ import {useQuery, useMutation} from '@apollo/client';
 
 const SavedBooks = () => {
   const {loading, data} = useQuery(GET_ME);
-  const user = data?.me || {};
+  const userData = data?.me || {};
   const [removeBook] = useMutation(REMOVE_BOOK);
 
   // create function that accepts the book's mongo _id value as param and deletes the book from the database
@@ -46,7 +46,7 @@ const SavedBooks = () => {
     return <h2>LOADING...</h2>;
   }
 
-  if (!user?.username) {
+  if (!userData?.username) {
     return (
       <h4>
         You need to be logged in for this feature to work.
