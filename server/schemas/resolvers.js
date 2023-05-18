@@ -1,22 +1,22 @@
-const {AuthenticationError} = require('apollo-server-express');
-const {User} = require('../models');
-const {signToken} = require('../utils/auth');
+const { AuthenticationError } = require('apollo-server-express');
+const { User } = require('../models');
+const { signToken } = require('../utils/auth');
 
 const resolvers = {
     Query: {
         me: async (parent, args, context) => {
             if (context.user) {
-                return User.findOne({_id: context.user._id}).select('-__v -password').populate('savedBooks')
+                return User.findOne({ _id: context.user._id }).select('-__v -password').populate('savedBooks')
             }
             throw new AuthenticationError('You are not logged in :(');
         },
     },
 
     Mutation: {
-        login: async (parent, {email, password}) => {
+        login: async (parent, { email, password }) => {
             // check if user exists by email
-            const user = await User.findOne({email});
-            if (!user){
+            const user = await User.findOne({ email });
+            if (!user) {
                 throw new AuthenticationError('No user found with this email');
             }
             // check password
@@ -26,32 +26,32 @@ const resolvers = {
             }
             // sign in if pass both
             const token = signToken(user);
-            return {token, user};
+            return { token, user };
         },
-        addUser: async (parent, {username, email, password}) => {
-            const user = await User.create({username, email, password});
+        addUser: async (parent, { username, email, password }) => {
+            const user = await User.create({ username, email, password });
             const token = signToken(user);
-            return {token, user};
+            return { token, user };
         },
-        saveBook: async (parent, {input}, context) => {
+        saveBook: async (parent, { input }, context) => {
             if (context.user) {
-                const addBook = await User.findOneAndUpdate(
-                    {_id: context.user._id},
-                    {$addtoSet: {savedBooks: input}},
-                    {new: true, runValidators: true}
-                );
-                return addBook;
+                const updateUserBooks = await User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    { $addToSet: { savedBooks: input } },
+                    { new: true }
+                ).populate('savedBooks');
+                return updateUserBooks;
             }
             throw new AuthenticationError('You are not logged in.')
         },
-        removeBook: async (parent, {bookId}, context) => {
+        removeBook: async (parent, { bookId }, context) => {
             if (context.user) {
-                const deleteBook = await User.findOneAndUpdate(
-                    {_id: context.user._id},
-                    {$pull: {savedBooks: {bookId: bookId}}},
-                    {new: true}
-                );
-                return deleteBook;
+                const updateUserBooks = await User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    { $pull: { savedBooks: { bookId: bookId } } },
+                    { new: true }
+                ).populate('savedBooks');
+                return updateUserBooks;
             }
             throw new AuthenticationError('You are not logged in.')
         }
